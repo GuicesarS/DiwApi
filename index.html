@@ -1,0 +1,249 @@
+<!-- Aluno: Guilherme César Soares Silva
+Estudante de Análise e Desenvolvimento de Sistemas -1 Período -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AllStore</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="#">AllStore</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <select class="form-control mr-2" id="categorySelect">
+                        <option value="">All Categories</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="jewelery">Jewelry</option>
+                        <option value="men's clothing">Men's Clothing</option>
+                        <option value="women's clothing">Women's Clothing</option>
+                    </select>
+                </li>
+                <li class="nav-item">
+                    <select class="form-control" id="priceSelect">
+                        <option value="">All Prices</option>
+                        <option value="0-50">Below $50</option>
+                        <option value="50-100">$50 - $100</option>
+                        <option value="100-200">$100 - $200</option>
+                        <option value="200+">Above $200</option>
+                    </select>
+                </li>
+            </ul>
+            <form class="form-inline mt-2 mt-md-0">
+                <input class="form-control mr-sm-2" type="text" placeholder="Pesquisar" id="searchInput" aria-label="Search">
+                <button onclick="pesquisaInput()" class="btn btn-primary my-2 my-sm-0" type="button" id="searchButton">Pesquisar</button>
+
+            </form>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row" id="productList">
+            <!-- Cartões de produto serão adicionados dinamicamente aqui -->
+        </div>
+
+        <div class="row product-details" id="productDetails">
+            <!-- Detalhes do produto serão adicionados dinamicamente aqui -->
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light mt-5">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-4 col-12 text-center">
+                    <p class="fs-5">Métodos de Pagamento</p>
+                    <p><i class="fs-4 bi bi-credit-card-fill"></i></p>
+                    <p><i class="fs-4 bi bi-paypal"></i></p>
+                </div>
+                <div class="col-sm-4 col-12 text-center">
+                    <p class="fs-5">Redes Sociais</p>
+                    <p><i class="bi bi-instagram"></i> AllStore</p>
+                    <p><i class="bi bi-twitter"></i> _AllStore</p>
+                </div>
+                <div class="col-sm-4 col-12 text-center">
+                    <p class="fs-5">Contatos</p>
+                    <p><i class="bi bi-envelope-at"></i> AllStore@gmail.com</p>
+                    <p><i class="bi bi-whatsapp"></i> (31) 94002 8922</p>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col text-center">
+                    <p>© 2023 AllStore. Todos os direitos reservados</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        // Função para buscar produtos da FakeStore API
+        function buscarProdutos() {
+            const categoria = document.getElementById('categorySelect').value;
+            const preco = document.getElementById('priceSelect').value;
+
+            let url = 'https://fakestoreapi.com/products';
+
+            if (categoria) {
+                url += `?category=${categoria}`;
+            }
+
+            if (preco) {
+                url += categoria ? `&price=${preco}` : `?price=${preco}`;
+            }
+
+            axios.get(url)
+                .then(response => {
+                    const listaProdutos = document.getElementById('productList');
+                    listaProdutos.innerHTML = '';
+
+                    response.data.forEach(produto => {
+                        const card = criarCartaoProduto(produto);
+                        listaProdutos.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        }
+
+        // Função para pesquisar um produto pelo nome
+        async function pesquisaInput() {
+            var input = document.getElementById('searchInput');
+            var valorInput = input.value;
+            var valorPrimeiraMaiuscula = valorInput.charAt(0).toUpperCase() + valorInput.slice(1);
+            var valorMaiuscula = valorInput.charAt(0).toUpperCase();
+            var selectedCategory = document.getElementById('categorySelect');
+            var category = selectedCategory.value;
+            var selectedPrice = document.getElementById('priceSelect');
+            var priceRange = selectedPrice.value;
+
+            const productList = document.getElementById("productList");
+            while (productList.firstChild) {
+                productList.removeChild(productList.firstChild);
+            }
+
+            try {
+                const response = await fetch('https://fakestoreapi.com/products');
+                const data = await response.json();
+                const result = data;
+
+                result.map((item) => {
+                    if (
+                        item.title.includes(valorInput) ||
+                        item.title.includes(valorPrimeiraMaiuscula) ||
+                        item.title.includes(valorMaiuscula)
+                    ) {
+                        if (
+                            (category === "" || item.category === category) &&
+                            (priceRange === "" || isPriceInRange(item.price, priceRange))
+                        ) {
+                            const div = document.createElement('div');
+                            div.classList.add('col-sm-3', 'mb-4');
+                            div.innerHTML = `
+                                <div class="card">
+                                    <img src="${item.image}" class="card-img-top" alt="${item.title}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${item.title}</h5>
+                                        <p class="card-text">$${item.price}</p>
+                                        <button class="btn btn-primary" onclick="mostrarDetalhesProduto(${item.id})">Detalhes</button>
+                                    </div>
+                                </div>
+                            `;
+                            productList.appendChild(div);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Função para criar o cartão de produto
+        function criarCartaoProduto(produto) {
+            const div = document.createElement('div');
+            div.classList.add('col-sm-3', 'mb-4');
+            div.innerHTML = `
+                <div class="card">
+                    <img src="${produto.image}" class="card-img-top" alt="${produto.title}">
+                    <div class="card-body">
+                        <h5 class="card-title">${produto.title}</h5>
+                        <p class="card-text">$${produto.price}</p>
+                        <button class="btn btn-primary" onclick="mostrarDetalhesProduto(${produto.id})">Detalhes</button>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        // Função para mostrar os detalhes de um produto
+        function mostrarDetalhesProduto(id) {
+            const productList = document.getElementById('productList');
+            const productDetails = document.getElementById('productDetails');
+
+            productList.style.display = 'none';
+            productDetails.innerHTML = '';
+
+            axios.get(`https://fakestoreapi.com/products/${id}`)
+                .then(response => {
+                    const produto = response.data;
+                    const card = criarCartaoDetalhesProduto(produto);
+                    productDetails.appendChild(card);
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+
+            productDetails.style.display = 'block';
+        }
+
+        // Função para criar o cartão de detalhes do produto
+        function criarCartaoDetalhesProduto(produto) {
+            const div = document.createElement('div');
+            div.classList.add('col-sm-6', 'offset-sm-3', 'mt-5');
+            div.innerHTML = `
+                <div class="card">
+                    <img src="${produto.image}" class="card-img-top" alt="${produto.title}">
+                    <div class="card-body">
+                        <h5 class="card-title">${produto.title}</h5>
+                        <p class="card-text">${produto.description}</p>
+                        <p class="card-text">$${produto.price}</p>
+                        <button class="btn btn-primary" onclick="voltarParaProdutos()">Voltar</button>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        // Função para voltar para a lista de produtos
+        function voltarParaProdutos() {
+            const productList = document.getElementById('productList');
+            const productDetails = document.getElementById('productDetails');
+
+            productList.style.display = 'flex';
+            productDetails.style.display = 'none';
+        }
+
+        // Função para verificar se o preço do produto está dentro da faixa de preço selecionada
+        function isPriceInRange(price, range) {
+            const priceRange = range.split('-');
+            const minPrice = parseInt(priceRange[0]);
+            const maxPrice = parseInt(priceRange[1]);
+
+            return price >= minPrice && price <= maxPrice;
+        }
+
+        // Inicializar a lista de produtos ao carregar a página
+        window.addEventListener('load', buscarProdutos);
+    </script>
+</body>
+</html>
